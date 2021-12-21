@@ -16,7 +16,7 @@ export interface EntityOptions {
 }
 
 export class EntityAdapter<
-  T extends Record<string, unknown> & {
+  T extends {
     [key: EntityAdapter<T>["idKey"]]: string | number;
   }
 > {
