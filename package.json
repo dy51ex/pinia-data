@@ -1,0 +1,26 @@
+{
+  "name": "pinia-data",
+  "version": "0.0.1",
+  "description": "Something that looks like a NgRx-data",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vue/composition-api": "^1.4.1",
+    "axios": "^0.24.0",
+    "lodash": "^4.17.21",
+    "typescript": "^4.5.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.3",
+    "@types/lodash": "^4.14.178",
+    "jest": "^27.4.5",
+    "ts-jest": "^27.1.2",
+    "vue": "^2.6.14"
+  }
+}
