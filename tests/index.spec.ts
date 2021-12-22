@@ -32,10 +32,8 @@ describe("pinia-data", () => {
 
     it("return empty array and write error in console when request rejected", async () => {
       axios.get = jest.fn().mockReturnValue(Promise.reject());
-      jest.spyOn(console, "error").mockImplementation(() => {});
       const result = await entityService.actions.getAll();
       expect(result).toEqual([]);
-      expect(console.error).toBeCalled();
       expect(entityService.state().entities).toEqual([]);
     });
   });
@@ -69,10 +67,8 @@ describe("pinia-data", () => {
     it("return empty array and write error in console when request rejected", async () => {
       axios.get = jest.fn().mockReturnValue(Promise.reject());
       const result = await entityService.actions.getById(1);
-      jest.spyOn(console, "error").mockImplementation(() => {});
       expect(result).toEqual(null);
       expect(entityService.state().entities).toEqual([]);
-      expect(console.error).toBeCalled();
     });
   });
 
@@ -105,10 +101,8 @@ describe("pinia-data", () => {
     it("return empty array on add and write error in console when request rejected", async () => {
       axios.post = jest.fn().mockReturnValue(Promise.reject());
       const result = await entityService.actions.add({ ...FAKE_ENTITY });
-      jest.spyOn(console, "error").mockImplementation(() => {});
       expect(result).toEqual(null);
       expect(entityService.state().entities).toEqual([]);
-      expect(console.error).toBeCalled();
     });
   });
 
@@ -141,10 +135,8 @@ describe("pinia-data", () => {
     it("return empty array and write error in console when request rejected", async () => {
       axios.put = jest.fn().mockReturnValue(Promise.reject());
       const result = await entityService.actions.update({ ...FAKE_ENTITY });
-      jest.spyOn(console, "error").mockImplementation(() => {});
       expect(result).toEqual(null);
       expect(entityService.state().entities).toEqual([]);
-      expect(console.error).toBeCalled();
     });
 
     it("return entity and replace it in state", async () => {
@@ -177,10 +169,8 @@ describe("pinia-data", () => {
     });
     it("return empty array and write error in console when request rejected", async () => {
       axios.get = jest.fn().mockReturnValue(Promise.reject());
-      jest.spyOn(console, "error").mockImplementation(() => {});
       const result = await entityService.actions.getWithQuery({ id: 1 });
       expect(result).toEqual([]);
-      expect(console.error).toBeCalled();
       expect(entityService.state().entities).toEqual([]);
     });
     it("return entity and replace it in state", async () => {
@@ -209,10 +199,8 @@ describe("pinia-data", () => {
 
     it("return entities array and write error in console when request rejected", async () => {
       axios.delete = jest.fn().mockReturnValue(Promise.reject());
-      jest.spyOn(console, "error").mockImplementation(() => {});
       const result = await entityService.actions.delete(1);
       expect(result).toEqual([]);
-      expect(console.error).toBeCalled();
       expect(entityService.state().entities).toEqual([]);
     });
   });

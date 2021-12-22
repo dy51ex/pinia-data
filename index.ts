@@ -14,24 +14,27 @@ const keyBy = <T>(array: any[], key: string | number): Dictionary<T> => {
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
+type EntityMethod =
+  | "add"
+  | "update"
+  | "delete"
+  | "getAll"
+  | "getById"
+  | "getWithQuery";
+
 export interface EntityOptions {
   plunarName?: string;
   axiosInstance?: AxiosInstance;
   idKey?: string;
+  onError?: { [key in EntityMethod]?: () => void };
+  onSuccess?: { [key in EntityMethod]?: () => void };
 }
 
 export class EntityAdapter<
-  T extends {
-    [key: EntityAdapter<T>["idKey"]]: string | number;
-  }
+  T extends { [key: EntityAdapter<T>["idKey"]]: string | number }
 > {
-  get entities() {
-    return this._entities;
-  }
-  set entities(value) {
-    this.entitiesMap = keyBy<T>(value, this.idKey);
-    this._entities = value;
-  }
+  private onSuccess: EntityOptions["onSuccess"] = {};
+  private onError: EntityOptions["onError"] = {};
   private _entities: T[] = [];
   public loading = false;
   private plunarName: string;
@@ -45,7 +48,19 @@ export class EntityAdapter<
     this.axios = options.axiosInstance || axios;
     this.plunarName = this.options.plunarName || `${this.entityName}s`;
     this.idKey = this.options.idKey || "id";
+    this.onError = options.onError;
+    this.onSuccess = options.onError;
   }
+
+  get entities() {
+    return this._entities;
+  }
+
+  set entities(value) {
+    this.entitiesMap = keyBy<T>(value, this.idKey);
+    this._entities = value;
+  }
+
   public state(state?: { entities: T[]; loading?: boolean }) {
     if (state) {
       this.entities = state.entities;
@@ -70,7 +85,11 @@ export class EntityAdapter<
     };
   }
 
-  async add(entity: PartialBy<T, EntityAdapter<T>["idKey"]>) {
+  private getIndex(id: string | number) {
+    return this.entities.findIndex((entity) => entity[this.idKey] === id);
+  }
+
+  async add(entity: T) {
     this.loading = true;
     let result: T | undefined;
     try {
@@ -80,13 +99,15 @@ export class EntityAdapter<
       }
       this.entities.push(result);
     } catch (error) {
-      console.error(error);
+      this.onError?.add && this.onError.add();
     }
+
+    this.onSuccess?.add && this.onSuccess.add();
     this.loading = false;
     return result || null;
   }
 
-  async update(entity: PartialBy<T, EntityAdapter<T>["idKey"]>) {
+  async update(entity: T) {
     this.loading = true;
     let result: T | undefined;
     try {
@@ -102,14 +123,11 @@ export class EntityAdapter<
       }
       this.entities.splice(this.getIndex(result.id), 1, result);
     } catch (error) {
-      console.error(error);
+      this.onError?.update && this.onError.update();
     }
+    this.onSuccess?.update && this.onSuccess.update();
     this.loading = false;
     return result || null;
-  }
-
-  private getIndex(id: string | number) {
-    return this.entities.findIndex((entity) => entity[this.idKey] === id);
   }
 
   async delete(id: number | string) {
@@ -119,8 +137,9 @@ export class EntityAdapter<
       this.entities.splice(this.getIndex(id), 1);
       return this.entities;
     } catch (error) {
-      console.error(error);
+      this.onError?.delete && this.onError.delete();
     }
+    this.onSuccess?.delete && this.onSuccess.delete();
     this.loading = false;
     return this.entities;
   }
@@ -130,8 +149,9 @@ export class EntityAdapter<
     try {
       this.entities = (await this.axios.get(this.plunarName)).data;
     } catch (error) {
-      console.error(error);
+      this.onError?.getAll && this.onError.getAll();
     }
+    this.onSuccess?.getAll && this.onSuccess.getAll();
     this.loading = false;
     return this.entities;
   }
@@ -150,8 +170,9 @@ export class EntityAdapter<
       }
       this.entities.splice(this.getIndex(id), 1, result);
     } catch (error) {
-      console.error(error);
+      this.onError?.getById && this.onError.getById();
     }
+    this.onSuccess?.getById && this.onSuccess.getById();
     this.loading = false;
     return result || null;
   }
@@ -166,7 +187,6 @@ export class EntityAdapter<
       if (!result) {
         return [];
       }
-      !this.entitiesMap; // ?
       result.forEach((entity) => {
         if (!this.entitiesMap[entity[this.idKey]]) {
           this.entities.push(entity);
@@ -175,8 +195,9 @@ export class EntityAdapter<
         this.entities.splice(this.getIndex(entity[this.idKey]), 1, entity);
       });
     } catch (error) {
-      console.error(error);
+      this.onError?.getWithQuery && this.onError.getWithQuery();
     }
+    this.onSuccess?.getWithQuery && this.onSuccess.getWithQuery();
     this.loading = false;
     return result || [];
   }
@@ -186,11 +207,7 @@ export class EntityAdapter<
   }
 }
 
-export const useEntity = <
-  T extends {
-    [key: EntityAdapter<T>["idKey"] | string]: any;
-  }
->(
+export const useEntity = <T extends { [key: string]: any }>(
   entityName: string,
   options: EntityOptions = {}
 ) => {
