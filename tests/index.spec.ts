@@ -1,5 +1,9 @@
 import { useEntity } from "../index";
 import axios from "axios";
+import Vue from "vue";
+import CompositionApi from "@vue/composition-api";
+
+Vue.use(CompositionApi);
 
 jest.mock("axios");
 

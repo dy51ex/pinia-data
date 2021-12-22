@@ -37,7 +37,7 @@ store.getWithQuery(Record<any>): T[]      `GET` /api/tests/?id=1
 
 ```
 plunarName?: string;
-axionsInstance?: AxiosInstance;
+axiosInstance?: AxiosInstance;
 idKey?: string;
 
 example:

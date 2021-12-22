@@ -1,17 +1,13 @@
 import { ref, computed, Ref } from "@vue/composition-api";
 import axios, { AxiosInstance } from "axios";
 import keyBy from "lodash/keyBy";
-import Vue from "vue";
-import CompositionApi from "@vue/composition-api";
-
-Vue.use(CompositionApi);
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 export interface EntityOptions {
   plunarName?: string;
-  axionsInstance?: AxiosInstance;
+  axiosInstance?: AxiosInstance;
   idKey?: string;
 }
 
@@ -29,9 +25,9 @@ export class EntityAdapter<
 
   constructor(
     private entityName: string,
-    private options: EntityOptions = { axionsInstance: axios }
+    private options: EntityOptions = { axiosInstance: axios }
   ) {
-    this.axios = options.axionsInstance || axios;
+    this.axios = options.axiosInstance || axios;
     this.plunarName = this.options.plunarName || `${this.entityName}s`;
     this.idKey = this.options.idKey || "id";
   }
@@ -180,7 +176,7 @@ export class EntityAdapter<
 }
 
 export const useEntity = <
-  T extends Record<string, unknown> & {
+  T extends {
     [key: EntityAdapter<T>["idKey"] | string]: any;
   }
 >(
