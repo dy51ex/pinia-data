@@ -1,6 +1,6 @@
 {
   "name": "pinia-data",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "description": "Something that looks like a NgRx-data",
   "main": "build/index.js",
   "types": "build/index.d.ts",

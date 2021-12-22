@@ -35,8 +35,8 @@ export class EntityAdapter<
 > {
   private onSuccess: EntityOptions["onSuccess"] = {};
   private onError: EntityOptions["onError"] = {};
-  private _entities: T[] = [];
-  public loading = false;
+  private entities: T[] = [];
+  public loading = { value: false };
   private plunarName: string;
   private axios: AxiosInstance;
   private idKey: string = "id";
@@ -49,22 +49,22 @@ export class EntityAdapter<
     this.plunarName = this.options.plunarName || `${this.entityName}s`;
     this.idKey = this.options.idKey || "id";
     this.onError = options.onError;
-    this.onSuccess = options.onError;
+    this.onSuccess = options.onSuccess;
   }
 
-  get entities() {
-    return this._entities;
+  private get _entities() {
+    return this.entities;
   }
 
-  set entities(value) {
+  private set _entities(value) {
     this.entitiesMap = keyBy<T>(value, this.idKey);
-    this._entities = value;
+    this.entities.splice(0, this.entities.length, ...value);
   }
 
   public state(state?: { entities: T[]; loading?: boolean }) {
     if (state) {
-      this.entities = state.entities;
-      this.loading = state.loading || false;
+      this._entities = state.entities;
+      this.loading.value = state.loading || false;
     }
     return {
       entities: this.entities,
@@ -86,29 +86,29 @@ export class EntityAdapter<
   }
 
   private getIndex(id: string | number) {
-    return this.entities.findIndex((entity) => entity[this.idKey] === id);
+    return this._entities.findIndex((entity) => entity[this.idKey] === id);
   }
 
   async add(entity: T) {
-    this.loading = true;
+    this.loading.value = true;
     let result: T | undefined;
     try {
       result = (await this.axios.post(this.plunarName, entity)).data;
       if (!result) {
         return null;
       }
-      this.entities.push(result);
+      this._entities.push(result);
     } catch (error) {
       this.onError?.add && this.onError.add();
     }
 
     this.onSuccess?.add && this.onSuccess.add();
-    this.loading = false;
+    this.loading.value = false;
     return result || null;
   }
 
   async update(entity: T) {
-    this.loading = true;
+    this.loading.value = true;
     let result: T | undefined;
     try {
       result = (
@@ -118,46 +118,46 @@ export class EntityAdapter<
         return null;
       }
       if (!this.entitiesMap[result.id]) {
-        this.entities.push(result);
+        this._entities.push(result);
         return result;
       }
-      this.entities.splice(this.getIndex(result.id), 1, result);
+      this._entities.splice(this.getIndex(result.id), 1, result);
     } catch (error) {
       this.onError?.update && this.onError.update();
     }
     this.onSuccess?.update && this.onSuccess.update();
-    this.loading = false;
+    this.loading.value = false;
     return result || null;
   }
 
   async delete(id: number | string) {
-    this.loading = true;
+    this.loading.value = true;
     try {
       await this.axios.delete(`${this.plunarName}/${id}`);
-      this.entities.splice(this.getIndex(id), 1);
+      this._entities.splice(this.getIndex(id), 1);
       return this.entities;
     } catch (error) {
       this.onError?.delete && this.onError.delete();
     }
     this.onSuccess?.delete && this.onSuccess.delete();
-    this.loading = false;
+    this.loading.value = false;
     return this.entities;
   }
 
   async getAll() {
-    this.loading = true;
+    this.loading.value = true;
     try {
-      this.entities = (await this.axios.get(this.plunarName)).data;
+      this._entities = (await this.axios.get(this.plunarName)).data;
     } catch (error) {
       this.onError?.getAll && this.onError.getAll();
     }
     this.onSuccess?.getAll && this.onSuccess.getAll();
-    this.loading = false;
+    this.loading.value = false;
     return this.entities;
   }
 
   async getById(id: number | string) {
-    this.loading = true;
+    this.loading.value = true;
     let result: T | undefined;
     try {
       result = (await this.axios.get<T>(`${this.plunarName}/${id}`)).data;
@@ -165,20 +165,20 @@ export class EntityAdapter<
         return null;
       }
       if (!this.entitiesMap[id]) {
-        this.entities.push(result);
+        this._entities.push(result);
         return result;
       }
-      this.entities.splice(this.getIndex(id), 1, result);
+      this._entities.splice(this.getIndex(id), 1, result);
     } catch (error) {
       this.onError?.getById && this.onError.getById();
     }
     this.onSuccess?.getById && this.onSuccess.getById();
-    this.loading = false;
+    this.loading.value = false;
     return result || null;
   }
 
   async getWithQuery(queryParams: Record<string, unknown>) {
-    this.loading = true;
+    this.loading.value = true;
     let result: T[] | undefined;
     try {
       result = (
@@ -189,16 +189,16 @@ export class EntityAdapter<
       }
       result.forEach((entity) => {
         if (!this.entitiesMap[entity[this.idKey]]) {
-          this.entities.push(entity);
+          this._entities.push(entity);
           return;
         }
-        this.entities.splice(this.getIndex(entity[this.idKey]), 1, entity);
+        this._entities.splice(this.getIndex(entity[this.idKey]), 1, entity);
       });
     } catch (error) {
       this.onError?.getWithQuery && this.onError.getWithQuery();
     }
     this.onSuccess?.getWithQuery && this.onSuccess.getWithQuery();
-    this.loading = false;
+    this.loading.value = false;
     return result || [];
   }
 
